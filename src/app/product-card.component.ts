@@ -1,0 +1,6 @@
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import type { Product } from './product.model';
+@Component({selector:'app-product-card',standalone:true,imports:[CurrencyPipe,DecimalPipe],changeDetection:ChangeDetectionStrategy.OnPush,template:`
+<article class="card"><div class="product-image" [style.--tone]="product().tone"><img [src]="'products/'+product().id+'.svg'" [alt]="'Illustration of '+product().name" width="220" height="220" loading="lazy">@if(product().tag){<span class="tag">{{product().tag}}</span>}</div><div class="card-head"><h3>{{product().name}}</h3><span class="price">{{product().price|currency:'INR':'symbol':'1.0-0':'en-IN'}}</span></div><p class="desc">{{product().desc}}</p><div class="card-bottom"><span class="rating" [attr.aria-label]="'Rated '+product().rating+' out of 5'">★ {{product().rating|number:'1.1-1'}}</span><button class="add" [disabled]="!product().stock" (click)="add.emit(product())" [attr.aria-label]="product().stock?'Add '+product().name+' to bag':product().name+' is out of stock'">{{product().stock?'Add to bag +':'Out of stock'}}</button></div></article>`})
+export class ProductCardComponent {readonly product=input.required<Product>();readonly add=output<Product>();}

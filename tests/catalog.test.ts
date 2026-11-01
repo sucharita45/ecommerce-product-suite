@@ -1,0 +1,14 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { filterProducts, normalizeCart } from '../src/app/catalog.ts';
+import { PRODUCTS } from '../src/app/products.data.ts';
+import type { Filters } from '../src/app/product.model.ts';
+const defaults:Filters={query:'',categories:[],max:6000,inStock:false,sort:'featured'};
+test('search ignores case and trims whitespace',()=>assert.deepEqual(filterProducts(PRODUCTS,{...defaults,query:' CERAMIC '}).map(p=>p.id),[1]));
+test('categories and budget combine before pagination',()=>assert.deepEqual(filterProducts(PRODUCTS,{...defaults,categories:['Stationery'],max:500}).map(p=>p.id),[5,16]));
+test('multiple categories use union',()=>assert.equal(filterProducts(PRODUCTS,{...defaults,categories:['Accessories','Stationery']}).length,8));
+test('availability hides out-of-stock products',()=>assert.equal(filterProducts(PRODUCTS,{...defaults,inStock:true}).length,16));
+test('numeric prices sort globally',()=>{const list=filterProducts(PRODUCTS,{...defaults,sort:'low'});assert.equal(list[0].price,300);assert.equal(list.at(-1)?.price,5600);assert.equal(filterProducts(PRODUCTS,{...defaults,sort:'high'})[0].price,5600);});
+test('rating and alphabetical sorts',()=>{assert.equal(filterProducts(PRODUCTS,{...defaults,sort:'rating'})[0].rating,4.9);const list=filterProducts(PRODUCTS,{...defaults,sort:'name'});assert.equal(list[0].name,'Arc Desk Lamp');});
+test('no matches and zero budget yield empty results',()=>{assert.equal(filterProducts(PRODUCTS,{...defaults,query:'zzzzz'}).length,0);assert.equal(filterProducts(PRODUCTS,{...defaults,max:0}).length,0);});
+test('corrupted cart is rejected and quantities are bounded',()=>{assert.deepEqual(normalizeCart(null,PRODUCTS),{});assert.deepEqual(normalizeCart([1,2],PRODUCTS),{});assert.deepEqual(normalizeCart({1:2,2:100,3:-1,4:1.5,5:'2',9:2,999:1},PRODUCTS),{1:2});});
